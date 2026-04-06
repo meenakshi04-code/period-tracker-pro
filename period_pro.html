@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Period Tracker</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+    --bg: #ffe6ea;
+    --card: white;
+    --text: #333;
+}
+
+body.dark {
+    --bg: #1e1e2f;
+    --card: #2c2c3c;
+    --text: #fff;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    transition: 0.5s;
+}
+
+.container {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 20px;
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: float 3s infinite ease-in-out;
+}
+
+h2 {
+    color: #ff4d6d;
+}
+
+input {
+    width: 90%;
+    padding: 10px;
+    margin: 8px;
+    border-radius: 10px;
+    border: none;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 10px;
+    background: #ff4d6d;
+    color: white;
+    cursor: pointer;
+    margin: 5px;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.toggle {
+    background: black;
+    color: white;
+}
+
+.result {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+/* Animation */
+@keyframes float {
+    0% { transform: translateY(0px);}
+    50% { transform: translateY(-10px);}
+    100% { transform: translateY(0px);}
+}
+
+/* GIF */
+.gif {
+    width: 80px;
+    margin: 10px auto;
+    display: block;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>🌸 Period Tracker Pro</h2>
+
+    <!-- GIF -->
+    <img class="gif" src="https://media.giphy.com/media/3o7TKMt1VVNkHV2PaE/giphy.gif">
+
+    <input type="date" id="lastPeriod">
+    <input type="number" id="cycleLength" placeholder="Cycle Length (28)">
+
+    <button onclick="calculate()">Calculate</button>
+    <button class="toggle" onclick="toggleMode()">🌙 Toggle Mode</button>
+
+    <div class="result" id="output"></div>
+
+    <canvas id="chart" height="200"></canvas>
+</div>
+
+<script>
+let history = JSON.parse(localStorage.getItem("cycles")) || [];
+
+function calculate() {
+    let lastDate = document.getElementById("lastPeriod").value;
+    let cycle = parseInt(document.getElementById("cycleLength").value);
+
+    if (!lastDate || !cycle) {
+        alert("Fill all fields!");
+        return;
+    }
+
+    let last = new Date(lastDate);
+
+    let next = new Date(last);
+    next.setDate(last.getDate() + cycle);
+
+    let ovulation = new Date(next);
+    ovulation.setDate(next.getDate() - 14);
+
+    let fertileStart = new Date(ovulation);
+    fertileStart.setDate(ovulation.getDate() - 5);
+
+    document.getElementById("output").innerHTML = `
+        📅 Next Period: ${next.toDateString()} <br>
+        🌼 Ovulation: ${ovulation.toDateString()} <br>
+        💖 Fertile: ${fertileStart.toDateString()} - ${ovulation.toDateString()}
+    `;
+
+    // Save history
+    history.push(cycle);
+    localStorage.setItem("cycles", JSON.stringify(history));
+
+    updateChart();
+}
+
+function toggleMode() {
+    document.body.classList.toggle("dark");
+}
+
+let chart;
+
+function updateChart() {
+    let ctx = document.getElementById("chart").getContext("2d");
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: history.map((_, i) => "Cycle " + (i+1)),
+            datasets: [{
+                label: 'Cycle Length',
+                data: history,
+                fill: false,
+                tension: 0.3
+            }]
+        }
+    });
+}
+
+// Load chart on start
+updateChart();
+</script>
+
+</body>
+</html>
